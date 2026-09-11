@@ -135,12 +135,20 @@ elif screen.startswith("2"):
             folium.Marker([DEPOT["lat"], DEPOT["lon"]], popup="Kho trung tâm",
                           icon=folium.Icon(color="cadetblue", icon="warehouse", prefix="fa")).add_to(m)
 
+            osrm_ok, osrm_fail, last_err = 0, 0, None
+
             def draw_layer(sol, label, color_list, dash):
+                global osrm_ok, osrm_fail, last_err
                 fg = folium.FeatureGroup(name=label, show=True)
                 for i, d in enumerate(sol["chi_tiet"]):
                     coords = d["coords"]
                     if use_osrm:
-                        coords = _cached_osrm(tuple(coords))
+                        coords, ok, err = _cached_osrm(tuple(coords))
+                        if ok:
+                            osrm_ok += 1
+                        else:
+                            osrm_fail += 1
+                            last_err = err
                     c = color_list[i % len(color_list)]
                     folium.PolyLine(
                         coords, color=c, weight=3, dash_array="8" if dash else None,
@@ -155,11 +163,22 @@ elif screen.startswith("2"):
                 draw_layer(st.session_state.sol_ai, "AI", _AI_COLORS, dash=False)
 
             folium.LayerControl(collapsed=False).add_to(m)
+            # returned_objects giới hạn: chỉ rerun khi click vào tuyến/marker,
+            # KHÔNG rerun khi chỉ zoom/kéo bản đồ -> tránh hiện lại spinner mỗi lần thao tác bản đồ
+            st_folium(m, width=None, height=560, key=f"map_{layers}_{use_osrm}",
+                      returned_objects=["last_object_clicked"])
+
             if use_osrm:
-                with st.spinner("Đang gọi OSRM để vẽ đường thực tế..."):
-                    st_folium(m, width=None, height=560, key=f"map_{layers}_{use_osrm}")
-            else:
-                st_folium(m, width=None, height=560, key=f"map_{layers}_{use_osrm}")
+                if osrm_fail == 0 and osrm_ok > 0:
+                    st.success(f"Đã vẽ theo đường thực tế cho {osrm_ok}/{osrm_ok+osrm_fail} tuyến.")
+                elif osrm_ok > 0:
+                    st.warning(f"Chỉ {osrm_ok}/{osrm_ok+osrm_fail} tuyến vẽ được theo đường thực tế, "
+                               f"{osrm_fail} tuyến rơi về đường thẳng do lỗi gọi OSRM (VD: {last_err}). "
+                               f"Thường do OSRM demo server quá tải/giới hạn — thử tick lại hoặc thử lại sau.")
+                elif osrm_fail > 0:
+                    st.error(f"Không gọi được OSRM cho bất kỳ tuyến nào (lỗi: {last_err}). "
+                             f"Kiểm tra: đã push `requests` trong requirements.txt và reboot app trên Streamlit Cloud chưa? "
+                             f"Server có chặn kết nối ra ngoài tới router.project-osrm.org không?")
 
             st.caption("Nét đứt = tuyến truyền thống, nét liền = tuyến AI. Tick/bỏ tick ở góc bản đồ để bật/tắt từng lớp.")
 
