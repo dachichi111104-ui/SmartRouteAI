@@ -11,6 +11,7 @@
 import time
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 import folium
 from streamlit_folium import st_folium
 
@@ -34,53 +35,95 @@ st.set_page_config(page_title="SmartRouteAI - Demo NCKH", layout="wide", page_ic
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
 
-html, body, [class*="css"] { font-family: 'Be Vietnam Pro', sans-serif; }
+:root {
+  --lavender: #EDE9FE; --lavender-ink: #7C3AED;
+  --mint: #D6F5E8;     --mint-ink: #0D9488;
+  --sky: #DCEBFC;      --sky-ink: #2563EB;
+  --peach: #FFE7D6;    --peach-ink: #EA580C;
+  --rose: #FDE1ED;     --rose-ink: #DB2777;
+  --butter: #FEF3C7;   --butter-ink: #B45309;
+  --ink: #3F3D56;
+  --ink-soft: #6B6483;
+  --card-line: #ECE8F7;
+}
+
+html, body, [class*="css"] { font-family: 'Be Vietnam Pro', sans-serif; color: var(--ink); }
+
+/* Nền pastel loang nhẹ toàn trang */
+[data-testid="stAppViewContainer"] {
+    background: radial-gradient(circle at 12% 0%, #F3EEFD 0%, transparent 42%),
+                radial-gradient(circle at 90% 12%, #E4F7F0 0%, transparent 45%),
+                radial-gradient(circle at 50% 100%, #FFF1E6 0%, transparent 40%),
+                #FCFBFF;
+}
+[data-testid="stHeader"] { background: transparent; }
 
 .block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 1180px; }
 
 #MainMenu, footer, header [data-testid="stToolbar"] { visibility: hidden; }
 
-/* Tiêu đề trang */
-.app-header { margin-bottom: 0.25rem; }
-.app-header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.15rem; letter-spacing: -0.01em; }
-.app-header p { color: #6B7280; font-size: 0.92rem; margin-top: 0; }
-
-/* Tabs điều hướng gọn, giống thanh nav tối giản */
-button[data-baseweb="tab"] {
-    font-weight: 600; font-size: 0.95rem; padding: 0.5rem 1.1rem;
-}
+/* Tabs điều hướng dạng pill pastel */
 div[data-baseweb="tab-list"] {
-    gap: 0.25rem; border-bottom: 1px solid #E5E7EB; margin-bottom: 1.5rem;
+    gap: 0.4rem; border-bottom: none; margin-bottom: 1.6rem;
+    background: #F6F3FC; padding: 0.35rem; border-radius: 999px; width: fit-content;
 }
-div[data-baseweb="tab-highlight"] { background-color: #2563EB; height: 2.5px; }
+button[data-baseweb="tab"] {
+    font-weight: 600; font-size: 0.92rem; padding: 0.5rem 1.15rem;
+    border-radius: 999px !important; color: var(--ink-soft);
+}
+button[data-baseweb="tab"][aria-selected="true"] {
+    background: #FFFFFF; color: var(--lavender-ink);
+    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.12);
+}
+div[data-baseweb="tab-highlight"] { display: none; }
+div[data-baseweb="tab-border"] { display: none; }
 
-/* Thẻ số liệu (metric) bo góc, đổ bóng nhẹ */
+/* Thẻ số liệu (metric) bo góc, nền pastel */
 div[data-testid="stMetric"] {
-    background: #F9FAFB; border: 1px solid #EEF0F3; border-radius: 14px;
-    padding: 1rem 1.1rem; box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+    background: #FFFFFF; border: 1px solid var(--card-line); border-radius: 16px;
+    padding: 1rem 1.1rem; box-shadow: 0 2px 10px rgba(124, 58, 237, 0.05);
 }
-div[data-testid="stMetricLabel"] { font-size: 0.8rem; color: #6B7280; }
-div[data-testid="stMetricValue"] { font-size: 1.35rem; font-weight: 700; }
+div[data-testid="stMetricLabel"] { font-size: 0.8rem; color: var(--ink-soft); }
+div[data-testid="stMetricValue"] { font-size: 1.35rem; font-weight: 700; color: var(--ink); }
 
-/* Nút bấm */
+/* Nút bấm pastel */
 .stButton>button {
-    border-radius: 10px; font-weight: 600; padding: 0.5rem 1.1rem; border: none;
+    border-radius: 12px; font-weight: 600; padding: 0.55rem 1.2rem; border: 1px solid var(--card-line);
+    background: #FFFFFF; color: var(--ink); transition: all 0.15s ease;
 }
-.stButton>button[kind="primary"] { background-color: #2563EB; }
+.stButton>button:hover { border-color: var(--lavender-ink); color: var(--lavender-ink); }
+.stButton>button[kind="primary"] {
+    background: linear-gradient(135deg, #A78BFA 0%, #818CF8 100%);
+    color: #FFFFFF; border: none; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
+}
+.stButton>button[kind="primary"]:hover { color: #FFFFFF; opacity: 0.92; }
 
 /* Card cho các khối input / expander */
 div[data-testid="stExpander"] {
-    border: 1px solid #EEF0F3; border-radius: 12px; box-shadow: none;
+    border: 1px solid var(--card-line); border-radius: 14px; box-shadow: none; background: #FFFFFF;
 }
 div[data-testid="stFileUploader"], div[data-testid="stDataFrame"] {
-    border-radius: 12px; overflow: hidden;
+    border-radius: 14px; overflow: hidden; border: 1px solid var(--card-line);
+}
+div[data-testid="stFileUploader"] { background: #FFFFFF; padding: 0.5rem; }
+
+/* Slider, number input, checkbox pastel accent */
+div[data-baseweb="slider"] div[role="slider"] { background-color: var(--lavender-ink) !important; }
+div[data-testid="stSliderTickBarMin"], div[data-testid="stSliderTickBarMax"] { color: var(--ink-soft); }
+
+/* Sidebar pastel */
+section[data-testid="stSidebar"] {
+    background: #F8F5FE; border-right: 1px solid var(--card-line);
 }
 
-/* Sidebar gọn hơn cho phần cấu hình */
-section[data-testid="stSidebar"] { border-right: 1px solid #EEF0F3; }
-h2, h3 { font-weight: 700; }
+/* Info / success / warning / error boxes bo tròn hơn, pastel hơn */
+div[data-testid="stAlert"] { border-radius: 14px; }
+
+h1, h2, h3 { font-weight: 700; color: var(--ink); }
+p, span, label { color: var(--ink); }
+.stCaption, [data-testid="stCaptionContainer"] { color: var(--ink-soft) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -95,12 +138,69 @@ for key, default in [
     if key not in st.session_state:
         st.session_state[key] = default
 
-st.markdown("""
-<div class="app-header">
-  <h1>🚚 SmartRouteAI</h1>
-  <p>Demo tối ưu hóa tuyến đường vận tải quốc nội — Nearest-Neighbor có ràng buộc tải trọng, so sánh với điều vận thủ công.</p>
+components.html("""
+<div style="font-family:'Be Vietnam Pro', sans-serif; margin: 0 0 0.5rem 0;">
+  <style>
+    .hero {
+      background: linear-gradient(120deg, #F3EEFE 0%, #E4F7F0 55%, #FFF1E6 100%);
+      border: 1px solid #ECE8F7;
+      border-radius: 20px;
+      padding: 1.7rem 1.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .hero-left h1 {
+      margin: 0 0 0.35rem 0;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #3F3D56;
+      letter-spacing: -0.01em;
+    }
+    .hero-left p {
+      margin: 0;
+      color: #6B6483;
+      font-size: 0.93rem;
+      max-width: 560px;
+      line-height: 1.55;
+    }
+    .hero-badges {
+      display: flex;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #FFFFFF;
+      border: 1px solid #ECE8F7;
+      color: #3F3D56;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.06);
+    }
+    .badge .dot { width: 7px; height: 7px; border-radius: 50%; }
+  </style>
+  <div class="hero">
+    <div class="hero-left">
+      <h1>🚚 SmartRouteAI</h1>
+      <p>Demo tối ưu hóa tuyến đường vận tải quốc nội — Nearest-Neighbor có ràng buộc tải trọng,
+      so sánh trực tiếp với cách điều vận thủ công truyền thống.</p>
+    </div>
+    <div class="hero-badges">
+      <span class="badge"><span class="dot" style="background:#7C3AED;"></span>AI Engine</span>
+      <span class="badge"><span class="dot" style="background:#0D9488;"></span>So sánh KPI thời gian thực</span>
+      <span class="badge"><span class="dot" style="background:#EA580C;"></span>Bản đồ tương tác</span>
+    </div>
+  </div>
 </div>
-""", unsafe_allow_html=True)
+""", height=155)
 
 tab1, tab2, tab3 = st.tabs([
     "📥 Nhập dữ liệu",
@@ -259,31 +359,66 @@ with tab3:
         planning_time_tt_min = 180.0  # thời gian lập kế hoạch thủ công (giả lập, không bắt người dùng chờ)
         planning_time_ai_min = st.session_state.ai_time_s / 60.0
 
-        def delta_pct(old, new, higher_is_better=False):
+        def delta_pct(old, new):
             if old == 0:
-                return "0%"
-            p = (new - old) / old * 100
-            sign = "+" if p >= 0 else ""
-            return f"{sign}{p:.1f}%"
+                return 0.0
+            return (new - old) / old * 100
 
         rows = [
-            ("Tổng quãng đường (km)", tt["tong_quang_duong_km"], ai["tong_quang_duong_km"]),
-            ("Tỷ lệ xe chạy rỗng (%)", tt["ty_le_chay_rong_pct"], ai["ty_le_chay_rong_pct"]),
-            ("OTIF - giao đúng hạn (%)", tt["otif_pct"], ai["otif_pct"]),
-            ("Nhiên liệu tiêu thụ (lít)", tt["nhien_lieu_lit"], ai["nhien_lieu_lit"]),
-            ("Phát thải CO₂ (kg)", tt["co2_kg"], ai["co2_kg"]),
-            ("Chi phí nhiên liệu (VNĐ)", tt["chi_phi_vnd"], ai["chi_phi_vnd"]),
-            ("Số xe sử dụng", tt["so_xe_su_dung"], ai["so_xe_su_dung"]),
+            ("Tổng quãng đường", tt["tong_quang_duong_km"], ai["tong_quang_duong_km"], "km", "lavender", "🛣️"),
+            ("Tỷ lệ xe chạy rỗng", tt["ty_le_chay_rong_pct"], ai["ty_le_chay_rong_pct"], "%", "peach", "📉"),
+            ("OTIF - giao đúng hạn", tt["otif_pct"], ai["otif_pct"], "%", "mint", "✅"),
+            ("Nhiên liệu tiêu thụ", tt["nhien_lieu_lit"], ai["nhien_lieu_lit"], "lít", "sky", "⛽"),
+            ("Phát thải CO₂", tt["co2_kg"], ai["co2_kg"], "kg", "rose", "🌱"),
+            ("Chi phí nhiên liệu", tt["chi_phi_vnd"], ai["chi_phi_vnd"], "VNĐ", "butter", "💰"),
+            ("Số xe sử dụng", tt["so_xe_su_dung"], ai["so_xe_su_dung"], "xe", "lavender", "🚚"),
         ]
 
-        cols = st.columns(4)
-        for i, (label, old, new) in enumerate(rows):
-            with cols[i % 4]:
-                st.metric(label, f"{new:,.1f}", delta_pct(old, new), delta_color="inverse" if "OTIF" not in label else "normal")
+        _PASTEL = {
+            "lavender": ("#F3EEFE", "#7C3AED"), "mint":  ("#DFF7EC", "#0D9488"),
+            "sky":      ("#DFEDFC", "#2563EB"), "peach": ("#FFEBDC", "#EA580C"),
+            "rose":     ("#FDE3EF", "#DB2777"), "butter":("#FEF3C7", "#B45309"),
+        }
 
-        st.metric("Thời gian lập kế hoạch",
-                   f"AI: {planning_time_ai_min*60:.2f} giây",
-                   f"Thủ công (giả lập): {planning_time_tt_min:.0f} phút")
+        cards_html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.85rem;font-family:\'Be Vietnam Pro\',sans-serif;">'
+        for label, old, new, unit, color_key, icon in rows:
+            bg, ink = _PASTEL[color_key]
+            pct = delta_pct(old, new)
+            higher_is_better = "OTIF" in label
+            is_good = (pct >= 0) if higher_is_better else (pct <= 0)
+            arrow = "▲" if pct >= 0 else "▼"
+            good_color, bad_color = "#0D9488", "#DB2777"
+            pill_color = good_color if is_good else bad_color
+            pill_bg = "#DFF7EC" if is_good else "#FDE3EF"
+            cards_html += f"""
+            <div style="background:{bg};border-radius:16px;padding:1rem 1.1rem;min-height:118px;
+                        display:flex;flex-direction:column;justify-content:space-between;">
+              <div style="font-size:0.8rem;font-weight:600;color:{ink};opacity:0.85;">{icon} {label}</div>
+              <div>
+                <div style="font-size:1.3rem;font-weight:800;color:#3F3D56;line-height:1.2;">
+                    {new:,.1f} <span style="font-size:0.7rem;font-weight:600;color:#6B6483;">{unit}</span>
+                </div>
+                <span style="display:inline-block;margin-top:0.3rem;background:{pill_bg};color:{pill_color};
+                             font-size:0.72rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:999px;">
+                    {arrow} {abs(pct):.1f}%
+                </span>
+              </div>
+            </div>"""
+        cards_html += '</div>'
+        st.markdown(cards_html, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div style="margin-top:0.85rem;background:#FFFFFF;border:1px solid #ECE8F7;border-radius:16px;
+                    padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.6rem;">
+          <div style="font-weight:700;color:#3F3D56;">⏱️ Thời gian lập kế hoạch</div>
+          <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+            <div><span style="color:#6B6483;font-size:0.82rem;">AI Engine&nbsp;</span>
+                 <span style="font-weight:800;color:#7C3AED;">{planning_time_ai_min*60:.2f} giây</span></div>
+            <div><span style="color:#6B6483;font-size:0.82rem;">Thủ công (giả lập)&nbsp;</span>
+                 <span style="font-weight:800;color:#3F3D56;">{planning_time_tt_min:.0f} phút</span></div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
 
         st.subheader("Biểu đồ mức cải thiện tổng hợp")
         chart_df = pd.DataFrame({
@@ -297,7 +432,7 @@ with tab3:
         st.subheader("Bảng so sánh chi tiết")
         table = pd.DataFrame([
             {"Chỉ tiêu": r[0], "Truyền thống": round(r[1], 2), "AI": round(r[2], 2),
-             "Mức thay đổi": delta_pct(r[1], r[2])}
+             "Mức thay đổi": f"{'+' if delta_pct(r[1], r[2]) >= 0 else ''}{delta_pct(r[1], r[2]):.1f}%"}
             for r in rows
         ])
         st.dataframe(table, use_container_width=True, hide_index=True)
