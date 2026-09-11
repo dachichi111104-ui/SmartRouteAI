@@ -27,7 +27,62 @@ _TT_COLORS = ["red", "orange", "darkred", "lightred"]
 def _cached_osrm(coords_tuple):
     return osrm_route_coords(list(coords_tuple))
 
-st.set_page_config(page_title="SmartRouteAI - Demo NCKH", layout="wide")
+st.set_page_config(page_title="SmartRouteAI - Demo NCKH", layout="wide", page_icon="🚚")
+
+# ---------------------------------------------------------------------------
+# Giao diện: theme gọn, tối giản
+# ---------------------------------------------------------------------------
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+
+html, body, [class*="css"] { font-family: 'Be Vietnam Pro', sans-serif; }
+
+.block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 1180px; }
+
+#MainMenu, footer, header [data-testid="stToolbar"] { visibility: hidden; }
+
+/* Tiêu đề trang */
+.app-header { margin-bottom: 0.25rem; }
+.app-header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.15rem; letter-spacing: -0.01em; }
+.app-header p { color: #6B7280; font-size: 0.92rem; margin-top: 0; }
+
+/* Tabs điều hướng gọn, giống thanh nav tối giản */
+button[data-baseweb="tab"] {
+    font-weight: 600; font-size: 0.95rem; padding: 0.5rem 1.1rem;
+}
+div[data-baseweb="tab-list"] {
+    gap: 0.25rem; border-bottom: 1px solid #E5E7EB; margin-bottom: 1.5rem;
+}
+div[data-baseweb="tab-highlight"] { background-color: #2563EB; height: 2.5px; }
+
+/* Thẻ số liệu (metric) bo góc, đổ bóng nhẹ */
+div[data-testid="stMetric"] {
+    background: #F9FAFB; border: 1px solid #EEF0F3; border-radius: 14px;
+    padding: 1rem 1.1rem; box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+}
+div[data-testid="stMetricLabel"] { font-size: 0.8rem; color: #6B7280; }
+div[data-testid="stMetricValue"] { font-size: 1.35rem; font-weight: 700; }
+
+/* Nút bấm */
+.stButton>button {
+    border-radius: 10px; font-weight: 600; padding: 0.5rem 1.1rem; border: none;
+}
+.stButton>button[kind="primary"] { background-color: #2563EB; }
+
+/* Card cho các khối input / expander */
+div[data-testid="stExpander"] {
+    border: 1px solid #EEF0F3; border-radius: 12px; box-shadow: none;
+}
+div[data-testid="stFileUploader"], div[data-testid="stDataFrame"] {
+    border-radius: 12px; overflow: hidden;
+}
+
+/* Sidebar gọn hơn cho phần cấu hình */
+section[data-testid="stSidebar"] { border-right: 1px solid #EEF0F3; }
+h2, h3 { font-weight: 700; }
+</style>
+""", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
 # Khởi tạo session state
@@ -40,21 +95,23 @@ for key, default in [
     if key not in st.session_state:
         st.session_state[key] = default
 
-st.title("🚚 SmartRouteAI — Demo tối ưu hóa tuyến đường vận tải quốc nội")
-st.caption("Minh họa phương pháp: Nearest-Neighbor có ràng buộc tải trọng, so sánh với cách điều vận thủ công.")
+st.markdown("""
+<div class="app-header">
+  <h1>🚚 SmartRouteAI</h1>
+  <p>Demo tối ưu hóa tuyến đường vận tải quốc nội — Nearest-Neighbor có ràng buộc tải trọng, so sánh với điều vận thủ công.</p>
+</div>
+""", unsafe_allow_html=True)
 
-screen = st.sidebar.radio("Màn hình", [
-    "1. Nhập dữ liệu (Data Input)",
-    "2. Tối ưu tuyến (Optimization Dashboard)",
-    "3. Báo cáo KPI (KPIs & Analytics)",
+tab1, tab2, tab3 = st.tabs([
+    "📥 Nhập dữ liệu",
+    "⚙️ Tối ưu tuyến",
+    "📊 Báo cáo KPI",
 ])
 
 # ===========================================================================
-# MÀN HÌNH 1: NHẬP DỮ LIỆU
+# TAB 1: NHẬP DỮ LIỆU
 # ===========================================================================
-if screen.startswith("1"):
-    st.header("Nhập dữ liệu")
-
+with tab1:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Đơn hàng")
@@ -93,16 +150,14 @@ if screen.startswith("1"):
         st.session_state.w_time = st.slider("Ưu tiên Thời gian / khung giờ", 0.0, 2.0, 1.0, 0.1)
         st.session_state.w_co2 = st.slider("Ưu tiên giảm Phát thải CO₂", 0.0, 2.0, 1.0, 0.1)
 
-    st.info("Sau khi có dữ liệu đơn hàng và đội xe, chuyển sang màn hình **2. Tối ưu tuyến** để chạy so sánh.")
+    st.info("Sau khi có dữ liệu đơn hàng và đội xe, chuyển sang tab **⚙️ Tối ưu tuyến** để chạy so sánh.")
 
 # ===========================================================================
-# MÀN HÌNH 2: TỐI ƯU TUYẾN
+# TAB 2: TỐI ƯU TUYẾN
 # ===========================================================================
-elif screen.startswith("2"):
-    st.header("Bảng điều khiển & Tối ưu tuyến")
-
+with tab2:
     if st.session_state.orders is None or st.session_state.fleet is None:
-        st.warning("Vui lòng nạp dữ liệu đơn hàng và đội xe ở màn hình 1 trước.")
+        st.warning("Vui lòng nạp dữ liệu đơn hàng và đội xe ở tab **📥 Nhập dữ liệu** trước.")
     else:
         if st.button("▶ BẮT ĐẦU TỐI ƯU HÓA (RUN AI ROUTE)", type="primary"):
             # Phương pháp truyền thống: ghi nhận thời gian cố định 180 phút (giả lập điều vận thủ công)
@@ -118,7 +173,7 @@ elif screen.startswith("2"):
             st.session_state.sol_ai = evaluate_solution(routes_ai, unassigned_ai, DEPOT, st.session_state.fuel_price)
             st.session_state.ai_time_s = time.perf_counter() - t0
 
-            st.success("Đã tối ưu xong. Xem bản đồ và lịch trình bên dưới, hoặc sang màn hình 3 để xem KPI.")
+            st.success("Đã tối ưu xong. Xem bản đồ và lịch trình bên dưới, hoặc sang tab **📊 Báo cáo KPI** để xem chi tiết.")
 
         if st.session_state.sol_ai is not None:
             colA, colB = st.columns([1, 1])
@@ -194,13 +249,11 @@ elif screen.startswith("2"):
             st.info("Bấm nút phía trên để chạy tối ưu.")
 
 # ===========================================================================
-# MÀN HÌNH 3: BÁO CÁO KPI
+# TAB 3: BÁO CÁO KPI
 # ===========================================================================
-else:
-    st.header("Báo cáo KPI & So sánh")
-
+with tab3:
     if st.session_state.sol_ai is None:
-        st.warning("Chưa có kết quả. Vui lòng chạy tối ưu ở màn hình 2 trước.")
+        st.warning("Chưa có kết quả. Vui lòng chạy tối ưu ở tab **⚙️ Tối ưu tuyến** trước.")
     else:
         tt, ai = st.session_state.sol_truyen_thong, st.session_state.sol_ai
         planning_time_tt_min = 180.0  # thời gian lập kế hoạch thủ công (giả lập, không bắt người dùng chờ)
