@@ -52,16 +52,16 @@ def osrm_route_coords(coords, timeout=5):
     coords: list các tuple (lat, lon) theo đúng thứ tự đi qua."""
     import requests
     if len(coords) < 2:
-        return coords
+        return coords, True, None
     coord_str = ";".join(f"{lon},{lat}" for lat, lon in coords)
     url = f"http://router.project-osrm.org/route/v1/driving/{coord_str}?overview=full&geometries=geojson"
     try:
         resp = requests.get(url, timeout=timeout)
         resp.raise_for_status()
         geom = resp.json()["routes"][0]["geometry"]["coordinates"]  # [[lon,lat], ...]
-        return [(lat, lon) for lon, lat in geom]
-    except Exception:
-        return coords  # fallback: giữ nguyên đường thẳng nếu không gọi được OSRM
+        return [(lat, lon) for lon, lat in geom], True, None
+    except Exception as e:
+        return coords, False, str(e)  # fallback: giữ nguyên đường thẳng nếu không gọi được OSRM
 
 
 def fmt_hms(hours):
