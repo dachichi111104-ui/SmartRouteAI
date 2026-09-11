@@ -28,98 +28,97 @@ _TT_COLORS = ["red", "orange", "darkred", "lightred"]
 def _cached_osrm(coords_tuple):
     return osrm_route_coords(list(coords_tuple))
 
-st.set_page_config(page_title="SmartRouteAI - Demo NCKH", layout="wide", page_icon="🚚")
+st.set_page_config(page_title="SmartRouteAI - Demo NCKH", layout="wide")
 
 # ---------------------------------------------------------------------------
 # Giao diện: theme gọn, tối giản
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
 
 :root {
-  --lavender: #EDE9FE; --lavender-ink: #7C3AED;
-  --mint: #D6F5E8;     --mint-ink: #0D9488;
-  --sky: #DCEBFC;      --sky-ink: #2563EB;
-  --peach: #FFE7D6;    --peach-ink: #EA580C;
-  --rose: #FDE1ED;     --rose-ink: #DB2777;
-  --butter: #FEF3C7;   --butter-ink: #B45309;
-  --ink: #3F3D56;
-  --ink-soft: #6B6483;
-  --card-line: #ECE8F7;
+  --accent: #6D74E6;        /* 1 tông duy nhất cho toàn bộ giao diện */
+  --accent-dark: #5459C9;
+  --accent-tint: #F1F1FC;   /* nền nhạt dùng chung cho mọi khối */
+  --accent-tint-2: #E9E9FB;
+  --ink: #33314A;
+  --ink-soft: #6E6B85;
+  --line: #E7E5F2;
+  --good: #16A34A;
+  --good-tint: #E7F6EC;
+  --bad: #DC2626;
+  --bad-tint: #FCE9E9;
 }
 
 html, body, [class*="css"] { font-family: 'Be Vietnam Pro', sans-serif; color: var(--ink); }
 
-/* Nền pastel loang nhẹ toàn trang */
-[data-testid="stAppViewContainer"] {
-    background: radial-gradient(circle at 12% 0%, #F3EEFD 0%, transparent 42%),
-                radial-gradient(circle at 90% 12%, #E4F7F0 0%, transparent 45%),
-                radial-gradient(circle at 50% 100%, #FFF1E6 0%, transparent 40%),
-                #FCFBFF;
-}
+[data-testid="stAppViewContainer"] { background: #FDFDFE; }
 [data-testid="stHeader"] { background: transparent; }
 
-.block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 1180px; }
+.block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 1120px; }
 
 #MainMenu, footer, header [data-testid="stToolbar"] { visibility: hidden; }
 
-/* Tabs điều hướng dạng pill pastel */
+/* Tabs điều hướng — gọn, 1 tông duy nhất, không icon rực rỡ */
 div[data-baseweb="tab-list"] {
-    gap: 0.4rem; border-bottom: none; margin-bottom: 1.6rem;
-    background: #F6F3FC; padding: 0.35rem; border-radius: 999px; width: fit-content;
+    gap: 0.3rem; border-bottom: 1px solid var(--line); margin-bottom: 1.8rem; padding-bottom: 0;
 }
 button[data-baseweb="tab"] {
-    font-weight: 600; font-size: 0.92rem; padding: 0.5rem 1.15rem;
-    border-radius: 999px !important; color: var(--ink-soft);
+    font-weight: 600; font-size: 0.93rem; padding: 0.6rem 0.2rem; margin-right: 1.6rem;
+    color: var(--ink-soft) !important; background: transparent !important;
 }
-button[data-baseweb="tab"][aria-selected="true"] {
-    background: #FFFFFF; color: var(--lavender-ink);
-    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.12);
+button[data-baseweb="tab"][aria-selected="true"] { color: var(--accent) !important; }
+button[data-baseweb="tab"] p { color: inherit !important; }
+div[data-baseweb="tab-highlight"], div[data-baseweb="tab-border"] {
+    background-color: var(--accent) !important; height: 2px !important;
 }
-div[data-baseweb="tab-highlight"] { display: none; }
-div[data-baseweb="tab-border"] { display: none; }
 
-/* Thẻ số liệu (metric) bo góc, nền pastel */
+/* Thẻ số liệu (metric) — nền trắng, viền mảnh, 1 tông */
 div[data-testid="stMetric"] {
-    background: #FFFFFF; border: 1px solid var(--card-line); border-radius: 16px;
-    padding: 1rem 1.1rem; box-shadow: 0 2px 10px rgba(124, 58, 237, 0.05);
+    background: #FFFFFF; border: 1px solid var(--line); border-radius: 14px;
+    padding: 1rem 1.1rem; box-shadow: none;
 }
 div[data-testid="stMetricLabel"] { font-size: 0.8rem; color: var(--ink-soft); }
-div[data-testid="stMetricValue"] { font-size: 1.35rem; font-weight: 700; color: var(--ink); }
+div[data-testid="stMetricValue"] { font-size: 1.3rem; font-weight: 700; color: var(--ink); }
 
-/* Nút bấm pastel */
+/* Nút bấm — 1 tông duy nhất */
 .stButton>button {
-    border-radius: 12px; font-weight: 600; padding: 0.55rem 1.2rem; border: 1px solid var(--card-line);
-    background: #FFFFFF; color: var(--ink); transition: all 0.15s ease;
+    border-radius: 10px; font-weight: 600; padding: 0.5rem 1.1rem; border: 1px solid var(--line);
+    background: #FFFFFF; color: var(--ink); transition: all 0.15s ease; box-shadow: none;
 }
-.stButton>button:hover { border-color: var(--lavender-ink); color: var(--lavender-ink); }
+.stButton>button:hover { border-color: var(--accent); color: var(--accent); }
+.stButton>button:focus:not(:active) { border-color: var(--accent) !important; color: var(--accent) !important; }
 .stButton>button[kind="primary"] {
-    background: linear-gradient(135deg, #A78BFA 0%, #818CF8 100%);
-    color: #FFFFFF; border: none; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
+    background: var(--accent) !important; color: #FFFFFF !important; border: none !important; box-shadow: none;
 }
-.stButton>button[kind="primary"]:hover { color: #FFFFFF; opacity: 0.92; }
+.stButton>button[kind="primary"]:hover { background: var(--accent-dark) !important; }
 
-/* Card cho các khối input / expander */
+/* Card cho khối input / expander */
 div[data-testid="stExpander"] {
-    border: 1px solid var(--card-line); border-radius: 14px; box-shadow: none; background: #FFFFFF;
+    border: 1px solid var(--line); border-radius: 12px; box-shadow: none; background: #FFFFFF;
 }
 div[data-testid="stFileUploader"], div[data-testid="stDataFrame"] {
-    border-radius: 14px; overflow: hidden; border: 1px solid var(--card-line);
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--line);
 }
-div[data-testid="stFileUploader"] { background: #FFFFFF; padding: 0.5rem; }
+div[data-testid="stFileUploader"] { background: #FFFFFF; padding: 0.4rem; }
+div[data-testid="stFileUploader"] button { background: #FFFFFF; border-color: var(--line); }
 
-/* Slider, number input, checkbox pastel accent */
-div[data-baseweb="slider"] div[role="slider"] { background-color: var(--lavender-ink) !important; }
+/* Ép toàn bộ widget tương tác về đúng 1 tông (ghi đè màu đỏ mặc định của Streamlit) */
+div[data-baseweb="slider"] div[role="slider"] { background-color: var(--accent) !important; border-color: var(--accent) !important; }
+div[data-baseweb="slider"] > div > div:nth-child(2) { background: var(--accent) !important; }
 div[data-testid="stSliderTickBarMin"], div[data-testid="stSliderTickBarMax"] { color: var(--ink-soft); }
+input:focus, textarea:focus, select:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 1px var(--accent) !important; }
+div[data-baseweb="checkbox"] span[aria-checked="true"] { background-color: var(--accent) !important; border-color: var(--accent) !important; }
+div[data-baseweb="radio"] div[aria-checked="true"] > div:first-child { border-color: var(--accent) !important; }
+div[data-baseweb="radio"] div[aria-checked="true"] > div:first-child > div { background-color: var(--accent) !important; }
+span[data-baseweb="tag"] { background-color: var(--accent-tint-2) !important; color: var(--accent-dark) !important; }
+div[data-baseweb="select"] > div:focus-within { border-color: var(--accent) !important; box-shadow: 0 0 0 1px var(--accent) !important; }
 
-/* Sidebar pastel */
-section[data-testid="stSidebar"] {
-    background: #F8F5FE; border-right: 1px solid var(--card-line);
-}
+/* Sidebar 1 tông */
+section[data-testid="stSidebar"] { background: var(--accent-tint); border-right: 1px solid var(--line); }
 
-/* Info / success / warning / error boxes bo tròn hơn, pastel hơn */
-div[data-testid="stAlert"] { border-radius: 14px; }
+div[data-testid="stAlert"] { border-radius: 12px; }
 
 h1, h2, h3 { font-weight: 700; color: var(--ink); }
 p, span, label { color: var(--ink); }
@@ -142,70 +141,38 @@ components.html("""
 <div style="font-family:'Be Vietnam Pro', sans-serif; margin: 0 0 0.5rem 0;">
   <style>
     .hero {
-      background: linear-gradient(120deg, #F3EEFE 0%, #E4F7F0 55%, #FFF1E6 100%);
-      border: 1px solid #ECE8F7;
-      border-radius: 20px;
-      padding: 1.7rem 1.9rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.5rem;
-      flex-wrap: wrap;
+      background: #F1F1FC;
+      border: 1px solid #E7E5F2;
+      border-radius: 16px;
+      padding: 1.5rem 1.8rem;
     }
-    .hero-left h1 {
-      margin: 0 0 0.35rem 0;
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #3F3D56;
+    .hero h1 {
+      margin: 0 0 0.4rem 0;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #33314A;
       letter-spacing: -0.01em;
     }
-    .hero-left p {
+    .hero p {
       margin: 0;
-      color: #6B6483;
-      font-size: 0.93rem;
-      max-width: 560px;
+      color: #6E6B85;
+      font-size: 0.92rem;
+      max-width: 640px;
       line-height: 1.55;
     }
-    .hero-badges {
-      display: flex;
-      gap: 0.55rem;
-      flex-wrap: wrap;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: #FFFFFF;
-      border: 1px solid #ECE8F7;
-      color: #3F3D56;
-      font-size: 0.78rem;
-      font-weight: 600;
-      padding: 0.4rem 0.8rem;
-      border-radius: 999px;
-      white-space: nowrap;
-      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.06);
-    }
-    .badge .dot { width: 7px; height: 7px; border-radius: 50%; }
   </style>
   <div class="hero">
-    <div class="hero-left">
-      <h1>🚚 SmartRouteAI</h1>
-      <p>Demo tối ưu hóa tuyến đường vận tải quốc nội — Nearest-Neighbor có ràng buộc tải trọng,
-      so sánh trực tiếp với cách điều vận thủ công truyền thống.</p>
-    </div>
-    <div class="hero-badges">
-      <span class="badge"><span class="dot" style="background:#7C3AED;"></span>AI Engine</span>
-      <span class="badge"><span class="dot" style="background:#0D9488;"></span>So sánh KPI thời gian thực</span>
-      <span class="badge"><span class="dot" style="background:#EA580C;"></span>Bản đồ tương tác</span>
-    </div>
+    <h1>SmartRouteAI</h1>
+    <p>Demo tối ưu hóa tuyến đường vận tải quốc nội — so sánh phương pháp Nearest-Neighbor
+    có ràng buộc tải trọng với cách điều vận thủ công truyền thống.</p>
   </div>
 </div>
-""", height=155)
+""", height=115)
 
 tab1, tab2, tab3 = st.tabs([
-    "📥 Nhập dữ liệu",
-    "⚙️ Tối ưu tuyến",
-    "📊 Báo cáo KPI",
+    "Nhập dữ liệu",
+    "Tối ưu tuyến",
+    "Báo cáo KPI",
 ])
 
 # ===========================================================================
@@ -215,7 +182,7 @@ with tab1:
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Đơn hàng")
-        if st.button("📥 Tải dữ liệu mẫu (100 đơn hàng)"):
+        if st.button("Tải dữ liệu mẫu (100 đơn hàng)"):
             st.session_state.orders = generate_orders(n=100, seed=42)
             st.success(f"Đã nạp {len(st.session_state.orders)} đơn hàng mẫu (TP.HCM - Bình Dương - Đồng Nai).")
 
@@ -233,7 +200,7 @@ with tab1:
     with col2:
         st.subheader("Đội xe")
         n_veh = st.slider("Số lượng xe", 4, 12, 9)
-        if st.button("🚛 Sinh đội xe mẫu"):
+        if st.button("Sinh đội xe mẫu"):
             fleet = generate_fleet(seed=7, min_veh=n_veh, max_veh=n_veh)
             st.session_state.fleet = fleet
             st.success(f"Đã sinh đội xe gồm {len(fleet)} xe.")
@@ -250,16 +217,16 @@ with tab1:
         st.session_state.w_time = st.slider("Ưu tiên Thời gian / khung giờ", 0.0, 2.0, 1.0, 0.1)
         st.session_state.w_co2 = st.slider("Ưu tiên giảm Phát thải CO₂", 0.0, 2.0, 1.0, 0.1)
 
-    st.info("Sau khi có dữ liệu đơn hàng và đội xe, chuyển sang tab **⚙️ Tối ưu tuyến** để chạy so sánh.")
+    st.info("Sau khi có dữ liệu đơn hàng và đội xe, chuyển sang tab **Tối ưu tuyến** để chạy so sánh.")
 
 # ===========================================================================
 # TAB 2: TỐI ƯU TUYẾN
 # ===========================================================================
 with tab2:
     if st.session_state.orders is None or st.session_state.fleet is None:
-        st.warning("Vui lòng nạp dữ liệu đơn hàng và đội xe ở tab **📥 Nhập dữ liệu** trước.")
+        st.warning("Vui lòng nạp dữ liệu đơn hàng và đội xe ở tab **Nhập dữ liệu** trước.")
     else:
-        if st.button("▶ BẮT ĐẦU TỐI ƯU HÓA (RUN AI ROUTE)", type="primary"):
+        if st.button("Bắt đầu tối ưu hóa", type="primary"):
             # Phương pháp truyền thống: ghi nhận thời gian cố định 180 phút (giả lập điều vận thủ công)
             routes_tt, unassigned_tt = traditional_routes(st.session_state.orders, st.session_state.fleet,
                                                            max_trips=st.session_state.max_trips)
@@ -273,7 +240,7 @@ with tab2:
             st.session_state.sol_ai = evaluate_solution(routes_ai, unassigned_ai, DEPOT, st.session_state.fuel_price)
             st.session_state.ai_time_s = time.perf_counter() - t0
 
-            st.success("Đã tối ưu xong. Xem bản đồ và lịch trình bên dưới, hoặc sang tab **📊 Báo cáo KPI** để xem chi tiết.")
+            st.success("Đã tối ưu xong. Xem bản đồ và lịch trình bên dưới, hoặc sang tab **Báo cáo KPI** để xem chi tiết.")
 
         if st.session_state.sol_ai is not None:
             colA, colB = st.columns([1, 1])
@@ -353,7 +320,7 @@ with tab2:
 # ===========================================================================
 with tab3:
     if st.session_state.sol_ai is None:
-        st.warning("Chưa có kết quả. Vui lòng chạy tối ưu ở tab **⚙️ Tối ưu tuyến** trước.")
+        st.warning("Chưa có kết quả. Vui lòng chạy tối ưu ở tab **Tối ưu tuyến** trước.")
     else:
         tt, ai = st.session_state.sol_truyen_thong, st.session_state.sol_ai
         planning_time_tt_min = 180.0  # thời gian lập kế hoạch thủ công (giả lập, không bắt người dùng chờ)
@@ -365,38 +332,30 @@ with tab3:
             return (new - old) / old * 100
 
         rows = [
-            ("Tổng quãng đường", tt["tong_quang_duong_km"], ai["tong_quang_duong_km"], "km", "lavender", "🛣️"),
-            ("Tỷ lệ xe chạy rỗng", tt["ty_le_chay_rong_pct"], ai["ty_le_chay_rong_pct"], "%", "peach", "📉"),
-            ("OTIF - giao đúng hạn", tt["otif_pct"], ai["otif_pct"], "%", "mint", "✅"),
-            ("Nhiên liệu tiêu thụ", tt["nhien_lieu_lit"], ai["nhien_lieu_lit"], "lít", "sky", "⛽"),
-            ("Phát thải CO₂", tt["co2_kg"], ai["co2_kg"], "kg", "rose", "🌱"),
-            ("Chi phí nhiên liệu", tt["chi_phi_vnd"], ai["chi_phi_vnd"], "VNĐ", "butter", "💰"),
-            ("Số xe sử dụng", tt["so_xe_su_dung"], ai["so_xe_su_dung"], "xe", "lavender", "🚚"),
+            ("Tổng quãng đường", tt["tong_quang_duong_km"], ai["tong_quang_duong_km"], "km"),
+            ("Tỷ lệ xe chạy rỗng", tt["ty_le_chay_rong_pct"], ai["ty_le_chay_rong_pct"], "%"),
+            ("OTIF - giao đúng hạn", tt["otif_pct"], ai["otif_pct"], "%"),
+            ("Nhiên liệu tiêu thụ", tt["nhien_lieu_lit"], ai["nhien_lieu_lit"], "lít"),
+            ("Phát thải CO₂", tt["co2_kg"], ai["co2_kg"], "kg"),
+            ("Chi phí nhiên liệu", tt["chi_phi_vnd"], ai["chi_phi_vnd"], "VNĐ"),
+            ("Số xe sử dụng", tt["so_xe_su_dung"], ai["so_xe_su_dung"], "xe"),
         ]
 
-        _PASTEL = {
-            "lavender": ("#F3EEFE", "#7C3AED"), "mint":  ("#DFF7EC", "#0D9488"),
-            "sky":      ("#DFEDFC", "#2563EB"), "peach": ("#FFEBDC", "#EA580C"),
-            "rose":     ("#FDE3EF", "#DB2777"), "butter":("#FEF3C7", "#B45309"),
-        }
-
-        cards_html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.85rem;font-family:\'Be Vietnam Pro\',sans-serif;">'
-        for label, old, new, unit, color_key, icon in rows:
-            bg, ink = _PASTEL[color_key]
+        cards_html = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;font-family:\'Be Vietnam Pro\',sans-serif;">'
+        for label, old, new, unit in rows:
             pct = delta_pct(old, new)
             higher_is_better = "OTIF" in label
             is_good = (pct >= 0) if higher_is_better else (pct <= 0)
             arrow = "▲" if pct >= 0 else "▼"
-            good_color, bad_color = "#0D9488", "#DB2777"
-            pill_color = good_color if is_good else bad_color
-            pill_bg = "#DFF7EC" if is_good else "#FDE3EF"
+            pill_color = "#16A34A" if is_good else "#DC2626"
+            pill_bg = "#E7F6EC" if is_good else "#FCE9E9"
             cards_html += f"""
-            <div style="background:{bg};border-radius:16px;padding:1rem 1.1rem;min-height:118px;
+            <div style="background:#FFFFFF;border:1px solid #E7E5F2;border-radius:14px;padding:1rem 1.1rem;min-height:108px;
                         display:flex;flex-direction:column;justify-content:space-between;">
-              <div style="font-size:0.8rem;font-weight:600;color:{ink};opacity:0.85;">{icon} {label}</div>
+              <div style="font-size:0.8rem;font-weight:600;color:#6E6B85;">{label}</div>
               <div>
-                <div style="font-size:1.3rem;font-weight:800;color:#3F3D56;line-height:1.2;">
-                    {new:,.1f} <span style="font-size:0.7rem;font-weight:600;color:#6B6483;">{unit}</span>
+                <div style="font-size:1.25rem;font-weight:700;color:#33314A;line-height:1.2;">
+                    {new:,.1f} <span style="font-size:0.7rem;font-weight:600;color:#6E6B85;">{unit}</span>
                 </div>
                 <span style="display:inline-block;margin-top:0.3rem;background:{pill_bg};color:{pill_color};
                              font-size:0.72rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:999px;">
@@ -408,14 +367,14 @@ with tab3:
         st.markdown(cards_html, unsafe_allow_html=True)
 
         st.markdown(f"""
-        <div style="margin-top:0.85rem;background:#FFFFFF;border:1px solid #ECE8F7;border-radius:16px;
+        <div style="margin-top:0.85rem;background:#FFFFFF;border:1px solid #E7E5F2;border-radius:14px;
                     padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.6rem;">
-          <div style="font-weight:700;color:#3F3D56;">⏱️ Thời gian lập kế hoạch</div>
+          <div style="font-weight:700;color:#33314A;">Thời gian lập kế hoạch</div>
           <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
-            <div><span style="color:#6B6483;font-size:0.82rem;">AI Engine&nbsp;</span>
-                 <span style="font-weight:800;color:#7C3AED;">{planning_time_ai_min*60:.2f} giây</span></div>
-            <div><span style="color:#6B6483;font-size:0.82rem;">Thủ công (giả lập)&nbsp;</span>
-                 <span style="font-weight:800;color:#3F3D56;">{planning_time_tt_min:.0f} phút</span></div>
+            <div><span style="color:#6E6B85;font-size:0.82rem;">AI&nbsp;</span>
+                 <span style="font-weight:700;color:#6D74E6;">{planning_time_ai_min*60:.2f} giây</span></div>
+            <div><span style="color:#6E6B85;font-size:0.82rem;">Thủ công (giả lập)&nbsp;</span>
+                 <span style="font-weight:700;color:#33314A;">{planning_time_tt_min:.0f} phút</span></div>
           </div>
         </div>
         """, unsafe_allow_html=True)
